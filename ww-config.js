@@ -280,6 +280,24 @@ export default {
       /* wwEditor:end */
     },
 
+    cardSpread: {
+      label: { en: "Card Spread" },
+      type: "Number",
+      section: "settings",
+      min: 0,
+      max: 100,
+      step: 5,
+      defaultValue: 70,
+      bindable: true,
+      /* wwEditor:start */
+      bindingValidation: {
+        type: "number",
+        tooltip: "How evenly cards are spread across the board (0 = random, 100 = evenly distributed)",
+      },
+      propertyHelp: "Controls card distribution: 0 = random positions, 100 = evenly spread across board",
+      /* wwEditor:end */
+    },
+
     cardWidth: {
       label: { en: "Card Width" },
       type: "Length",

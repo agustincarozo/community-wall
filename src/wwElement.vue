@@ -245,6 +245,7 @@ export default {
       const canvasRect = canvas.getBoundingClientRect();
       const orientation = props.content?.cardOrientation || "vertical";
       const sizeMultiplier = getSizeMultiplier();
+      const spread = props.content?.cardSpread ?? 70; // 0-100, default 70
       
       // Get base dimensions
       let baseWidth, baseHeight;
@@ -260,14 +261,70 @@ export default {
       const cardWidth = baseWidth * sizeMultiplier;
       const cardHeight = baseHeight * sizeMultiplier;
 
-      processedCreations.value.forEach((creation, index) => {
-        if (!cardPositions.value.has(creation.id)) {
-          // Random position within canvas bounds
-          const maxX = Math.max(0, canvasRect.width - cardWidth - 40);
-          const maxY = Math.max(0, canvasRect.height - cardHeight - 40);
+      const cards = processedCreations.value;
+      const cardCount = cards.length;
+      
+      if (cardCount === 0) return;
 
-          const x = Math.random() * maxX + 20;
-          const y = Math.random() * maxY + 20;
+      // Calculate optimal grid for even distribution
+      const padding = 40;
+      const availableWidth = Math.max(0, canvasRect.width - padding * 2);
+      const availableHeight = Math.max(0, canvasRect.height - padding * 2);
+      
+      // Calculate grid dimensions (aim for roughly square grid)
+      const aspectRatio = availableWidth / availableHeight;
+      const cols = Math.ceil(Math.sqrt(cardCount * aspectRatio));
+      const rows = Math.ceil(cardCount / cols);
+      
+      // Calculate spacing between cards
+      const spacingX = cols > 1 ? (availableWidth - cardWidth * cols) / (cols - 1) : 0;
+      const spacingY = rows > 1 ? (availableHeight - cardHeight * rows) / (rows - 1) : 0;
+      
+      // Ensure minimum spacing
+      const minSpacing = 20;
+      const effectiveSpacingX = Math.max(minSpacing, spacingX);
+      const effectiveSpacingY = Math.max(minSpacing, spacingY);
+
+      cards.forEach((creation, index) => {
+        if (!cardPositions.value.has(creation.id)) {
+          let x, y;
+          
+          if (spread === 0) {
+            // Completely random (original behavior)
+            const maxX = Math.max(0, canvasRect.width - cardWidth - padding);
+            const maxY = Math.max(0, canvasRect.height - cardHeight - padding);
+            x = Math.random() * maxX + padding / 2;
+            y = Math.random() * maxY + padding / 2;
+          } else if (spread === 100) {
+            // Perfectly even grid distribution
+            const col = index % cols;
+            const row = Math.floor(index / cols);
+            x = padding + col * (cardWidth + effectiveSpacingX);
+            y = padding + row * (cardHeight + effectiveSpacingY);
+          } else {
+            // Interpolate between random and grid based on spread value
+            const spreadRatio = spread / 100;
+            
+            // Grid position
+            const col = index % cols;
+            const row = Math.floor(index / cols);
+            const gridX = padding + col * (cardWidth + effectiveSpacingX);
+            const gridY = padding + row * (cardHeight + effectiveSpacingY);
+            
+            // Random position
+            const maxX = Math.max(0, canvasRect.width - cardWidth - padding);
+            const maxY = Math.max(0, canvasRect.height - cardHeight - padding);
+            const randomX = Math.random() * maxX + padding / 2;
+            const randomY = Math.random() * maxY + padding / 2;
+            
+            // Interpolate
+            x = gridX * spreadRatio + randomX * (1 - spreadRatio);
+            y = gridY * spreadRatio + randomY * (1 - spreadRatio);
+          }
+          
+          // Ensure cards stay within bounds
+          x = Math.max(padding / 2, Math.min(x, canvasRect.width - cardWidth - padding / 2));
+          y = Math.max(padding / 2, Math.min(y, canvasRect.height - cardHeight - padding / 2));
 
           cardPositions.value.set(creation.id, { x, y });
         }
@@ -626,6 +683,17 @@ export default {
       ],
       () => {
         nextTick(() => {
+          initializePositions();
+        });
+      }
+    );
+    
+    // Watch for spread changes separately - clear all positions to recalculate
+    watch(
+      () => props.content?.cardSpread,
+      () => {
+        nextTick(() => {
+          cardPositions.value.clear();
           initializePositions();
         });
       }
