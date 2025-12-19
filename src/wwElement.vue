@@ -10,6 +10,9 @@
         :key="creation.id || index"
         class="moodboard-card"
         :class="{ dragging: creation.isDragging }"
+        :data-orientation="getCardOrientation()"
+        :data-size="getCardSize()"
+        :data-content-height="getContentAreaHeight()"
         :style="getCardStyle(creation, index)"
         @mousedown="handleMouseDown($event, creation)"
         @click="handleCardClick(creation, $event)"
@@ -207,14 +210,55 @@ export default {
       return processed;
     });
 
+    // Get size multiplier
+    const getSizeMultiplier = () => {
+      const size = props.content?.cardSize || "medium";
+      const multipliers = {
+        small: 0.75,
+        medium: 1.0,
+        large: 1.25,
+        xlarge: 1.5,
+      };
+      return multipliers[size] || 1.0;
+    };
+
+    // Get card orientation for template
+    const getCardOrientation = () => {
+      return props.content?.cardOrientation || "vertical";
+    };
+
+    // Get card size for template
+    const getCardSize = () => {
+      return props.content?.cardSize || "medium";
+    };
+
+    // Get content area height for template
+    const getContentAreaHeight = () => {
+      return props.content?.contentAreaHeight || "medium";
+    };
+
     // Initialize random positions for cards
     const initializePositions = () => {
       if (!canvasRef.value) return;
 
       const canvas = canvasRef.value;
       const canvasRect = canvas.getBoundingClientRect();
-      const cardWidth = parseInt(props.content?.cardWidth || "280px");
-      const cardHeight = parseInt(props.content?.cardHeight || "350px");
+      const orientation = props.content?.cardOrientation || "vertical";
+      const sizeMultiplier = getSizeMultiplier();
+      
+      // Get base dimensions
+      let baseWidth, baseHeight;
+      if (orientation === "landscape") {
+        baseWidth = parseInt(props.content?.landscapeCardWidth || "500px");
+        baseHeight = parseInt(props.content?.landscapeCardHeight || "300px");
+      } else {
+        baseWidth = parseInt(props.content?.cardWidth || "280px");
+        baseHeight = parseInt(props.content?.cardHeight || "350px");
+      }
+      
+      // Apply size multiplier
+      const cardWidth = baseWidth * sizeMultiplier;
+      const cardHeight = baseHeight * sizeMultiplier;
 
       processedCreations.value.forEach((creation, index) => {
         if (!cardPositions.value.has(creation.id)) {
@@ -237,8 +281,22 @@ export default {
     // Get card style with position and rotation
     const getCardStyle = (creation, index) => {
       const position = cardPositions.value.get(creation.id) || { x: 0, y: 0 };
-      const cardWidth = props.content?.cardWidth || "280px";
-      const cardHeight = props.content?.cardHeight || "350px";
+      const orientation = props.content?.cardOrientation || "vertical";
+      const sizeMultiplier = getSizeMultiplier();
+      
+      // Get base card dimensions based on orientation
+      let baseWidth, baseHeight;
+      if (orientation === "landscape") {
+        baseWidth = parseInt(props.content?.landscapeCardWidth || "500px");
+        baseHeight = parseInt(props.content?.landscapeCardHeight || "300px");
+      } else {
+        baseWidth = parseInt(props.content?.cardWidth || "280px");
+        baseHeight = parseInt(props.content?.cardHeight || "350px");
+      }
+      
+      // Apply size multiplier
+      const cardWidth = `${baseWidth * sizeMultiplier}px`;
+      const cardHeight = `${baseHeight * sizeMultiplier}px`;
 
       // Get or set rotation for this card
       if (!cardRotations.value.has(creation.id)) {
@@ -256,6 +314,10 @@ export default {
 
       const shadowEnabled = props.content?.cardShadow !== false;
 
+      // Get font sizes from props
+      const titleFontSize = props.content?.titleFontSize || "18px";
+      const descriptionFontSize = props.content?.descriptionFontSize || "14px";
+
       return {
         left: `${position.x}px`,
         top: `${position.y}px`,
@@ -267,6 +329,8 @@ export default {
             ? "0 16px 32px rgba(0, 0, 0, 0.25)"
             : "0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1)"
           : "none",
+        "--title-font-size": titleFontSize,
+        "--description-font-size": descriptionFontSize,
       };
     };
 
@@ -336,8 +400,22 @@ export default {
           const newX = e.clientX - canvasRect.left - dragOffset.value.x;
           const newY = e.clientY - canvasRect.top - dragOffset.value.y;
 
-          const cardWidth = parseInt(props.content?.cardWidth || "280px");
-          const cardHeight = parseInt(props.content?.cardHeight || "350px");
+          const orientation = props.content?.cardOrientation || "vertical";
+          const sizeMultiplier = getSizeMultiplier();
+          
+          // Get base dimensions
+          let baseWidth, baseHeight;
+          if (orientation === "landscape") {
+            baseWidth = parseInt(props.content?.landscapeCardWidth || "500px");
+            baseHeight = parseInt(props.content?.landscapeCardHeight || "300px");
+          } else {
+            baseWidth = parseInt(props.content?.cardWidth || "280px");
+            baseHeight = parseInt(props.content?.cardHeight || "350px");
+          }
+          
+          // Apply size multiplier
+          const cardWidth = baseWidth * sizeMultiplier;
+          const cardHeight = baseHeight * sizeMultiplier;
 
           // Constrain to canvas bounds
           const maxX = Math.max(0, canvasRect.width - cardWidth);
@@ -536,9 +614,16 @@ export default {
       { deep: true }
     );
 
-    // Watch for canvas resize
+    // Watch for canvas resize and orientation/size changes
     watch(
-      () => [props.content?.cardWidth, props.content?.cardHeight],
+      () => [
+        props.content?.cardWidth,
+        props.content?.cardHeight,
+        props.content?.cardOrientation,
+        props.content?.landscapeCardWidth,
+        props.content?.landscapeCardHeight,
+        props.content?.cardSize,
+      ],
       () => {
         nextTick(() => {
           initializePositions();
@@ -553,6 +638,9 @@ export default {
       getCardStyle,
       getInitial,
       getImageStyle,
+      getCardOrientation,
+      getCardSize,
+      getContentAreaHeight,
       handleMouseDown,
       handleCardClick,
       handleImageLoadStart,
@@ -611,6 +699,8 @@ export default {
   transition: transform 0.3s ease, box-shadow 0.3s ease, z-index 0s;
   user-select: none;
   border: 1px solid rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
 
   // Pasted photo effect - slight border and shadow
   &::before {
@@ -648,10 +738,118 @@ export default {
 
 .card-image-wrapper {
   width: 100%;
-  height: 70%;
   position: relative;
   overflow: hidden;
   background: #f0f0f0;
+  flex: 1;
+  min-height: 0;
+}
+
+// Content area height adjustments
+.moodboard-card[data-content-height="small"] {
+  .card-image-wrapper {
+    flex: 4; // 80% of space
+  }
+  
+  .card-content {
+    flex: 1; // 20% of space
+    padding: 12px 16px;
+  }
+}
+
+.moodboard-card[data-content-height="medium"] {
+  .card-image-wrapper {
+    flex: 2.33; // ~70% of space (7/10)
+  }
+  
+  .card-content {
+    flex: 1; // ~30% of space (3/10)
+    padding: 16px;
+  }
+}
+
+.moodboard-card[data-content-height="large"] {
+  .card-image-wrapper {
+    flex: 1.5; // 60% of space
+  }
+  
+  .card-content {
+    flex: 1; // 40% of space
+    padding: 16px;
+  }
+}
+
+.moodboard-card[data-content-height="xlarge"] {
+  .card-image-wrapper {
+    flex: 1; // 50% of space
+  }
+  
+  .card-content {
+    flex: 1; // 50% of space
+    padding: 20px;
+  }
+}
+
+// Landscape orientation adjustments
+.moodboard-card[data-orientation="landscape"] {
+  .card-image-wrapper {
+    flex: 3; // 75% of space
+  }
+  
+  .card-content {
+    flex: 1; // 25% of space
+    padding: 12px 16px;
+  }
+  
+  .card-header {
+    margin-bottom: 6px;
+  }
+  
+  .card-title {
+    font-size: 16px;
+    -webkit-line-clamp: 1;
+  }
+  
+  .card-description {
+    font-size: 13px;
+    -webkit-line-clamp: 2;
+    min-height: 36px; // Ensure description is visible (2 lines * 18px line-height)
+  }
+  
+}
+
+// Size-based scaling for avatars only (images scale with card size)
+.moodboard-card[data-size="small"] {
+  .card-avatar {
+    width: 27px;
+    height: 27px;
+  }
+  
+  .avatar-initial {
+    font-size: 12px;
+  }
+}
+
+.moodboard-card[data-size="large"] {
+  .card-avatar {
+    width: 45px;
+    height: 45px;
+  }
+  
+  .avatar-initial {
+    font-size: 20px;
+  }
+}
+
+.moodboard-card[data-size="xlarge"] {
+  .card-avatar {
+    width: 54px;
+    height: 54px;
+  }
+  
+  .avatar-initial {
+    font-size: 24px;
+  }
 }
 
 .card-image {
@@ -709,11 +907,14 @@ export default {
 
 .card-content {
   padding: 16px;
-  height: 30%;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
   box-sizing: border-box;
+  overflow: visible;
+  min-height: 0;
+  flex-shrink: 0;
+  background: white;
 }
 
 .card-header {
@@ -762,7 +963,7 @@ export default {
 }
 
 .card-title {
-  font-size: 18px;
+  font-size: var(--title-font-size, 18px);
   font-weight: 700;
   color: #333;
   margin: 0;
@@ -775,15 +976,17 @@ export default {
 }
 
 .card-description {
-  font-size: 14px;
+  font-size: var(--description-font-size, 14px);
   color: #666;
   margin: 0;
   line-height: 1.4;
-  overflow: hidden;
+  overflow: visible;
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
+  flex: 1;
+  min-height: 0;
 }
 
 

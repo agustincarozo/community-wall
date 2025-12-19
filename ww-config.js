@@ -301,12 +301,89 @@ export default {
       section: "settings",
       defaultValue: "350px",
       bindable: true,
+      hidden: (content) => content?.cardOrientation === "landscape",
       /* wwEditor:start */
       bindingValidation: {
         type: "string",
         tooltip: "Height of each card (e.g., '350px', '400px')",
       },
-      propertyHelp: "Base height for moodboard cards",
+      propertyHelp: "Base height for moodboard cards (only used in vertical orientation)",
+      /* wwEditor:end */
+    },
+
+    cardOrientation: {
+      label: { en: "Card Orientation" },
+      type: "TextSelect",
+      section: "settings",
+      options: {
+        options: [
+          { value: "vertical", label: "Vertical (Portrait)" },
+          { value: "landscape", label: "Landscape (Horizontal)" },
+        ],
+      },
+      defaultValue: "vertical",
+      bindable: true,
+      /* wwEditor:start */
+      bindingValidation: {
+        type: "string",
+        tooltip: "Valid values: vertical | landscape",
+      },
+      propertyHelp: "Orientation of the cards - vertical for mobile apps, landscape for desktop/web apps",
+      /* wwEditor:end */
+    },
+
+    cardSize: {
+      label: { en: "Card Size" },
+      type: "TextSelect",
+      section: "settings",
+      options: {
+        options: [
+          { value: "small", label: "Small (75%)" },
+          { value: "medium", label: "Medium (100%)" },
+          { value: "large", label: "Large (125%)" },
+          { value: "xlarge", label: "Extra Large (150%)" },
+        ],
+      },
+      defaultValue: "medium",
+      bindable: true,
+      /* wwEditor:start */
+      bindingValidation: {
+        type: "string",
+        tooltip: "Valid values: small | medium | large | xlarge",
+      },
+      propertyHelp: "Overall size multiplier for cards - affects all dimensions proportionally",
+      /* wwEditor:end */
+    },
+
+    landscapeCardWidth: {
+      label: { en: "Landscape Card Width" },
+      type: "Length",
+      section: "settings",
+      defaultValue: "500px",
+      bindable: true,
+      hidden: (content) => content?.cardOrientation !== "landscape",
+      /* wwEditor:start */
+      bindingValidation: {
+        type: "string",
+        tooltip: "Width of landscape cards (e.g., '500px', '600px')",
+      },
+      propertyHelp: "Width for landscape-oriented cards",
+      /* wwEditor:end */
+    },
+
+    landscapeCardHeight: {
+      label: { en: "Landscape Card Height" },
+      type: "Length",
+      section: "settings",
+      defaultValue: "300px",
+      bindable: true,
+      hidden: (content) => content?.cardOrientation !== "landscape",
+      /* wwEditor:start */
+      bindingValidation: {
+        type: "string",
+        tooltip: "Height of landscape cards (e.g., '300px', '350px')",
+      },
+      propertyHelp: "Height for landscape-oriented cards",
       /* wwEditor:end */
     },
 
@@ -361,6 +438,59 @@ export default {
         tooltip: "Valid values: cover | contain | fill | scale-down",
       },
       propertyHelp: "How the image should fit within the card",
+      /* wwEditor:end */
+    },
+
+    contentAreaHeight: {
+      label: { en: "Content Area Height" },
+      type: "TextSelect",
+      section: "style",
+      options: {
+        options: [
+          { value: "small", label: "Small (20%)" },
+          { value: "medium", label: "Medium (30%)" },
+          { value: "large", label: "Large (40%)" },
+          { value: "xlarge", label: "Extra Large (50%)" },
+        ],
+      },
+      defaultValue: "medium",
+      bindable: true,
+      /* wwEditor:start */
+      bindingValidation: {
+        type: "string",
+        tooltip: "Valid values: small | medium | large | xlarge",
+      },
+      propertyHelp: "Height of the white content area (title and description section)",
+      /* wwEditor:end */
+    },
+
+    titleFontSize: {
+      label: { en: "Title Font Size" },
+      type: "Length",
+      section: "style",
+      defaultValue: "18px",
+      bindable: true,
+      /* wwEditor:start */
+      bindingValidation: {
+        type: "string",
+        tooltip: "Font size for card titles (e.g., '18px', '20px', '1.2rem')",
+      },
+      propertyHelp: "Font size for the card title text",
+      /* wwEditor:end */
+    },
+
+    descriptionFontSize: {
+      label: { en: "Description Font Size" },
+      type: "Length",
+      section: "style",
+      defaultValue: "14px",
+      bindable: true,
+      /* wwEditor:start */
+      bindingValidation: {
+        type: "string",
+        tooltip: "Font size for card descriptions (e.g., '14px', '16px', '1rem')",
+      },
+      propertyHelp: "Font size for the card description text",
       /* wwEditor:end */
     },
   },
