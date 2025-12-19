@@ -792,30 +792,78 @@ export default {
 
 // Landscape orientation adjustments
 .moodboard-card[data-orientation="landscape"] {
-  .card-image-wrapper {
-    flex: 3; // 75% of space
-  }
-  
-  .card-content {
-    flex: 1; // 25% of space
-    padding: 12px 16px;
-  }
-  
   .card-header {
     margin-bottom: 6px;
   }
   
   .card-title {
-    font-size: 16px;
+    // Use CSS variable, but allow smaller default for landscape
+    font-size: var(--title-font-size, 16px);
     -webkit-line-clamp: 1;
   }
   
   .card-description {
-    font-size: 13px;
+    // Use CSS variable, but allow smaller default for landscape
+    font-size: var(--description-font-size, 13px);
     -webkit-line-clamp: 2;
-    min-height: 36px; // Ensure description is visible (2 lines * 18px line-height)
   }
   
+  // Apply content area height to landscape - override defaults
+  &[data-content-height="small"] {
+    .card-image-wrapper {
+      flex: 4; // 80% of space
+    }
+    
+    .card-content {
+      flex: 1; // 20% of space
+      padding: 12px 16px;
+    }
+  }
+  
+  &[data-content-height="medium"] {
+    .card-image-wrapper {
+      flex: 2.33; // ~70% of space
+    }
+    
+    .card-content {
+      flex: 1; // ~30% of space
+      padding: 12px 16px;
+    }
+  }
+  
+  &[data-content-height="large"] {
+    .card-image-wrapper {
+      flex: 1.5; // 60% of space
+    }
+    
+    .card-content {
+      flex: 1; // 40% of space
+      padding: 16px;
+    }
+  }
+  
+  &[data-content-height="xlarge"] {
+    .card-image-wrapper {
+      flex: 1; // 50% of space
+    }
+    
+    .card-content {
+      flex: 1; // 50% of space
+      padding: 20px;
+    }
+  }
+  
+  // Default if no content-height is set (backward compatibility)
+  &:not([data-content-height]) {
+    .card-image-wrapper {
+      flex: 3; // 75% of space
+    }
+    
+    .card-content {
+      flex: 1; // 25% of space
+      padding: 12px 16px;
+    }
+  }
 }
 
 // Size-based scaling for avatars only (images scale with card size)
