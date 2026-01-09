@@ -511,6 +511,27 @@ export default {
       propertyHelp: "Font size for the card description text",
       /* wwEditor:end */
     },
+
+    avatarShape: {
+      label: { en: "Avatar Shape" },
+      type: "TextSelect",
+      section: "style",
+      options: {
+        options: [
+          { value: "circle", label: "Circle" },
+          { value: "square", label: "Square" },
+        ],
+      },
+      defaultValue: "circle",
+      bindable: true,
+      /* wwEditor:start */
+      bindingValidation: {
+        type: "string",
+        tooltip: "Valid values: circle | square",
+      },
+      propertyHelp: "Shape of the avatar image - circular or square",
+      /* wwEditor:end */
+    },
   },
   triggerEvents: [
     {

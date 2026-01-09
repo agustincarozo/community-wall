@@ -43,7 +43,7 @@
         </div>
         <div class="card-content">
           <div class="card-header">
-            <div class="card-avatar">
+            <div class="card-avatar" :data-avatar-shape="getAvatarShape()">
               <img
                 v-if="creation.avatar && !hasImageError(`avatar-${creation.id}`)"
                 :src="creation.avatar"
@@ -235,6 +235,11 @@ export default {
     // Get content area height for template
     const getContentAreaHeight = () => {
       return props.content?.contentAreaHeight || "medium";
+    };
+
+    // Get avatar shape for template
+    const getAvatarShape = () => {
+      return props.content?.avatarShape || "circle";
     };
 
     // Initialize random positions for cards
@@ -709,6 +714,7 @@ export default {
       getCardOrientation,
       getCardSize,
       getContentAreaHeight,
+      getAvatarShape,
       handleMouseDown,
       handleCardClick,
       handleImageLoadStart,
@@ -1043,11 +1049,16 @@ export default {
 .card-avatar {
   width: 36px;
   height: 36px;
-  border-radius: 50%;
+  border-radius: 50%; // Default to circle
   overflow: hidden;
   flex-shrink: 0;
   border: 2px solid rgba(0, 0, 0, 0.1);
   background: #f0f0f0;
+  
+  // Square avatar shape
+  &[data-avatar-shape="square"] {
+    border-radius: 4px; // Small rounded corners for square
+  }
 }
 
 .avatar-image {
